@@ -103,6 +103,7 @@ export function SpreadsheetInput({ onAddParts, fieldVisibility, existingParts = 
     setRows(loadedRows);
     setImportMode('existing');
   };
+
   const addRow = () => {
     setRows(prev => [...prev, createEmptyRow()]);
   };

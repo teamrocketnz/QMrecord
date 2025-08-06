@@ -76,6 +76,7 @@ export function PartsTable({ parts, fieldVisibility, onUpdatePart, onDeletePart 
       [field]: value
     }));
   };
+
   const getStatusBadge = (status: string) => {
     const styles = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -219,6 +220,7 @@ export function PartsTable({ parts, fieldVisibility, onUpdatePart, onDeletePart 
       />
     );
   };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
       <div className="p-6 border-b border-gray-200">
