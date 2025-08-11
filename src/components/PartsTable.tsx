@@ -93,26 +93,75 @@ export function PartsTable({ parts, fieldVisibility, onUpdatePart, onDeletePart 
   };
 
   const exportToCSV = () => {
-    const headers = ['Part Number', 'Description', 'Supplier', 'Delivery Date', 'Count', 'SAP Placed', 'SAP Released', 'Quality Status'];
+    // Create comprehensive headers based on field visibility
+    const headers = [
+      'Part Number',
+      ...(fieldVisibility.partDescription ? ['Part Description'] : []),
+      ...(fieldVisibility.supplier ? ['Supplier'] : []),
+      ...(fieldVisibility.deliveryDate ? ['Delivery Date to Moffat'] : []),
+      ...(fieldVisibility.batchNumberBox ? ['Batch Number (Box)'] : []),
+      ...(fieldVisibility.batchDateCode ? ['Batch/Date Code (Part)'] : []),
+      ...(fieldVisibility.count ? ['Count'] : []),
+      ...(fieldVisibility.expectedCount ? ['Expected Count'] : []),
+      ...(fieldVisibility.sapPlaced ? ['SAP Placed'] : []),
+      ...(fieldVisibility.sapReleased ? ['SAP Released'] : []),
+      ...(fieldVisibility.comments ? ['Comments'] : []),
+      ...(fieldVisibility.notes ? ['Notes'] : []),
+      ...(fieldVisibility.inspectorName ? ['Inspector Name'] : []),
+      ...(fieldVisibility.inspectionDate ? ['Inspection Date'] : []),
+      ...(fieldVisibility.qualityStatus ? ['Quality Status'] : []),
+      ...(fieldVisibility.purchaseOrder ? ['Purchase Order'] : []),
+      ...(fieldVisibility.storageLocation ? ['Storage Location'] : []),
+      ...(fieldVisibility.expiryDate ? ['Expiry Date'] : []),
+      ...(fieldVisibility.certificateCompliance ? ['Certificate of Compliance'] : []),
+      ...(fieldVisibility.nonConformance ? ['Non-Conformance'] : []),
+      'Created Date',
+      'Last Updated',
+      'Record ID'
+    ];
+
+    // Create comprehensive data rows
     const csvContent = [
       headers.join(','),
       ...sortedParts.map(part => [
         part.partNumber,
-        part.partDescription,
-        part.supplier,
-        part.deliveryDate,
-        part.count,
-        part.sapPlaced ? 'Yes' : 'No',
-        part.sapReleased ? 'Yes' : 'No',
-        part.qualityStatus
-      ].join(','))
+        ...(fieldVisibility.partDescription ? [part.partDescription || ''] : []),
+        ...(fieldVisibility.supplier ? [part.supplier || ''] : []),
+        ...(fieldVisibility.deliveryDate ? [part.deliveryDate ? new Date(part.deliveryDate).toLocaleDateString() : ''] : []),
+        ...(fieldVisibility.batchNumberBox ? [part.batchNumberBox || ''] : []),
+        ...(fieldVisibility.batchDateCode ? [part.batchDateCode || ''] : []),
+        ...(fieldVisibility.count ? [part.count.toString()] : []),
+        ...(fieldVisibility.expectedCount ? [part.expectedCount?.toString() || ''] : []),
+        ...(fieldVisibility.sapPlaced ? [part.sapPlaced ? 'Yes' : 'No'] : []),
+        ...(fieldVisibility.sapReleased ? [part.sapReleased ? 'Yes' : 'No'] : []),
+        ...(fieldVisibility.comments ? [`"${(part.comments || '').replace(/"/g, '""')}"`] : []),
+        ...(fieldVisibility.notes ? [`"${(part.notes || '').replace(/"/g, '""')}"`] : []),
+        ...(fieldVisibility.inspectorName ? [part.inspectorName || ''] : []),
+        ...(fieldVisibility.inspectionDate ? [part.inspectionDate ? new Date(part.inspectionDate).toLocaleDateString() : ''] : []),
+        ...(fieldVisibility.qualityStatus ? [part.qualityStatus.toUpperCase()] : []),
+        ...(fieldVisibility.purchaseOrder ? [part.purchaseOrder || ''] : []),
+        ...(fieldVisibility.storageLocation ? [part.storageLocation || ''] : []),
+        ...(fieldVisibility.expiryDate ? [part.expiryDate ? new Date(part.expiryDate).toLocaleDateString() : ''] : []),
+        ...(fieldVisibility.certificateCompliance ? [part.certificateCompliance || ''] : []),
+        ...(fieldVisibility.nonConformance ? [part.nonConformance || ''] : []),
+        new Date(part.createdAt).toLocaleString(),
+        new Date(part.updatedAt).toLocaleString(),
+        part.id
+      ].map(field => {
+        // Handle CSV escaping for fields that might contain commas
+        const fieldStr = field.toString();
+        if (fieldStr.includes(',') || fieldStr.includes('\n') || fieldStr.includes('"')) {
+          return `"${fieldStr.replace(/"/g, '""')}"`;
+        }
+        return fieldStr;
+      }).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `parts-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `QM-Parts-Export-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -242,9 +291,11 @@ export function PartsTable({ parts, fieldVisibility, onUpdatePart, onDeletePart 
             <button
               onClick={exportToCSV}
               className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              title="Export all visible data to Excel/CSV format"
             >
               <Download className="w-4 h-4" />
-              <span>Export CSV</span>
+              <span className="hidden sm:inline">Export to Excel</span>
+              <span className="sm:hidden">Export</span>
             </button>
           </div>
         </div>
